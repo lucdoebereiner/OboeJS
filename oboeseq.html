@@ -1,0 +1,611 @@
+<html>
+    <head>
+	<script src="solver.js"></script>
+	<script src="oboedb.js"></script>
+	<script src="FileSaver.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Raleway:300" rel="stylesheet" type="text/css">	
+
+
+	<style>
+	 body {
+	     padding: 20px;
+	     line-height: 2em;
+	     background: #EEEEEE;
+	     font-family: 'Raleway', sans-serif;
+	     font-size: 1.25em;
+	 }
+
+	 a {
+	     color: #444444;
+	 }
+
+	 #footer {
+	     font-size: 0.75em;
+	     position:absolute;
+	     bottom:0;
+	     width:100%;
+	     height:60px;   /* Height of the footer */
+	 }
+
+	 #container {
+	     min-height:100%;
+	     position:relative;
+	 }
+
+	 .wrapper {
+	     display: grid;
+	     grid-template-columns: 1fr 1fr;
+	     grid-column-gap: 15px;
+	     padding-bottom:60px; 
+	 }
+
+	 
+	 .box {
+	     padding: 0px;
+	 }
+	 
+	 button, input[type=submit] {
+	     background-color: #4169E1;
+	     border: none;
+	     color: white;
+	     padding: 10px 30px;
+	     text-decoration: none;
+	     margin: 10px 0px;
+	     border-radius: 4px;
+	     cursor: pointer;
+
+	 }
+
+	 button:disabled, input[type=submit]:disabled {
+	     background: #bbbbbb;
+	 }
+
+	 input[type=text], input[type=number], select, textarea{
+	     width: 100%;
+	     padding: 12px;
+	     border: 1px solid #ccc;
+	     border-radius: 4px;
+	     box-sizing: border-box;
+	     resize: vertical;
+	 }
+
+	 label {
+	     padding: 12px 12px 12px 0;
+	     display: inline-block;
+	 }
+	 
+	 /* Clear floats after the columns */
+	 .row:after {
+	     content: "";
+	     display: table;
+	     clear: both;
+	 }
+
+
+	 .spec-div {
+	     //	     padding: 10px;
+	 }
+
+	 .constraint-form {
+	     overflow: hidden;
+	     display: block;
+	     padding: 10px;
+	     border-radius: 4px;
+	     margin: 10px 0px;
+	     border: 1px solid black;
+	     background: lightgrey;
+	 }
+
+	 .added-constraint {
+	     overflow: hidden;
+	     display: block;
+	     padding: 10px;
+	     border-radius: 4px;
+	     margin: 10px 0px;
+	     border: 1px solid black;
+	     background: lightgrey;
+	 }
+
+	 textarea {
+	     resize: none;
+	 }
+
+	 .loader {
+	     border: 16px solid #f3f3f3;
+	     border-radius: 50%;
+	     border-top: 16px solid #4169E1;
+	     width: 60px;
+	     height: 60px;
+	     margin-left: auto;
+	     margin-right: auto;
+	     margin-top: 50px;
+	     -webkit-animation: spin 2s linear infinite; /* Safari */
+	     animation: spin 2s linear infinite;
+	 }
+
+	 /* Safari */
+	 @-webkit-keyframes spin {
+	     0% { -webkit-transform: rotate(0deg); }
+	     100% { -webkit-transform: rotate(360deg); }
+	 }
+
+	 @keyframes spin {
+	     0% { transform: rotate(0deg); }
+	     100% { transform: rotate(360deg); }
+	 }
+	</style>
+    </head>
+    
+	</style>
+    </head>
+    <body>
+
+	<div id="container">
+	<h1>Oboe Fingering Sequence Generator</h1>
+	<div class="wrapper">
+
+	    <div class="box" style="grid-area: 1 / 1 / 1 / 1" >
+		
+		<div id="spec" class="spec-div">
+		    <label for="database-select">Fingering database</label>
+		    <select id="database-select">
+			<option selected value="mono">Monophonic</option>
+			<option disabled value="multi">Multiphonic</option>
+		    </select><br />
+		    
+		    <label for="number">Length of sequence</label>
+		    <input id="number" type="number" value="2" min="2"><br />
+		    
+		    
+		    <!-- <button type="button" id="add-constraint" onclick="addConstraint()">Add</button>
+		    -->
+
+		    <label for="constraint-menu">Add constraint</label>
+		    <select id="constraint-menu" onchange="constraintUpdated(this)">
+			<option disabled selected value> -- select an option -- </option>
+
+			<optgroup label="Fingering">
+			    <option value="all-different">No repetitions of fingerings</option>
+			    <option value="number-of-changes">Number of changing fingers</option>
+			    <option value="easy-neighbors">Easy fingering transitions</option>
+			    <option value="easy-group">Easy fingering transitions group</option>
+			</optgroup>
+
+			<optgroup label="Pitch">
+			    <option value="pitch-range">Pitch range</option>
+			    <option value="possiblepitches">Possible pitches</option>
+			    <option value="exclude-pitches">Exclude pitches</option>
+			    <option value="first-pitch">First pitch</option>
+			    <option value="ascending-pitches">Ascending pitches</option>
+			    <option value="descending-pitches">Descending pitch</option>
+			    <option value="pitch-sequence">Pitch sequence</option>
+			    <option value="no-consec-pitch-rep">No consecutive pitch repetitions</option>
+
+			</optgroup>
+
+			<optgroup label="Intervals">
+			    <option value="interval-range">Interval range</option>
+			    <option value="possible-intervals">Possible intervals</option>
+			    <option value="exclude-intervals">Exclude intervals</option>
+			    <option value="alternating">Alternating interval directions</option>
+			    <option value="interval-content">Interval content</option>
+			</optgroup>
+			
+		    </select>
+		    
+		    <div id="current-constraint">
+
+		    </div>
+
+		    <div style="margin-top:10px">
+			<button type="button" onclick="findSolution()">Find Solution</button>
+			<button type="button" id="next-solution"
+				onclick="nextSolution()" disabled>Next Solution</button>
+			
+		    </div>
+		</div>
+	    </div>
+	    
+	    <div class="box" style="grid-area: 1 / 2 / 3 / 3">
+		<div id="constraints">
+		    <strong>Selected Constraints</strong>
+		</div>
+	    </div>
+
+	    <div class="box" style="grid-area: 2 / 1 / 2 / 1">
+		<div id="results"></div>
+
+	    </div>
+
+	    
+	</div>
+	
+
+	<div id="footer">
+	    <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a><br />The <i>Oboe Fingering Sequence Generator</i> by <a href="mailto:luc@doebereiner.org">Luc D&ouml;bereiner</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+	</div>
+
+	</div>
+    </body>
+    <script>
+     //console.log(document.getElementById("database-select").value)
+
+     Array.prototype.getByKey = function(key) {
+	 return this.find(el => el[0] == key)[1];
+     };
+     
+     var constraints = [];
+     var solver;
+     
+     class FormSpec {
+
+	 // name : string
+	 // type : "number" | "numberlist"
+	 // as a list of pairs
+	 constructor(name,spec,id) {
+	     this.name = name;
+	     this.spec = spec;
+	     this.data = [];
+	     this.id = id;
+	 }
+
+	 buildForm() {
+	     let form = document.createElement("form");
+	     let formspec = this;
+	     form.id = this.id+"-form";
+	     this.ids = this.spec.map(s => {
+		 let label = document.createElement("label");
+		 let input = document.createElement("input");
+		 let inid = formspec.id + "-" + s[0].replace(/\s+/g, '-').toLowerCase();
+		 input.id = inid;
+		 label.htmlFor = inid;
+		 label.innerHTML = s[0];
+		 input.type = s[1];
+		 if (input.type == "text") {
+		     input.placeholder="n1, n2, n3,..."
+		 } else if (input.type == "number") {
+		     input.step = 0.5
+		 };
+		 input.required = true;
+		 if (s[0] != "") {
+		     form.appendChild(label);
+		 };
+		 form.appendChild(input);
+		 return [inid,s[1],s[2]];
+	     });
+	     return form;
+	 }
+
+	 getData() {
+	     if (this.ids == undefined) {
+		 return [];
+	     } else {
+		 return this.ids.map(i => {
+		     let el = document.getElementById(i[0]);
+		     let val;
+		     switch (i[1]) {
+			 case "number":
+			     val = Number(el.value);
+			     break;
+			 case "text":
+			     val = el.value.split(',').map(Number);
+			     break;
+		     };
+		     return [i[2], val];
+		 })
+	     }
+	     
+	 }
+	 
+     }
+
+     
+     class Constraint {
+
+	 constructor(name,inputSpec,id) {
+	     this.name = name;
+	     this.id = id;
+	     this.spec = new FormSpec(name,inputSpec,id);
+	     this.data;
+	     //	     contstraints.push(this);
+	 }
+
+	 toHTML() {
+	     // after adding
+	     let div = document.createElement("div");
+	     //	     let header = document.createElement("h4");
+	     let constraint = this;
+	     let button = document.createElement("button");
+	     div.id = this.id;
+	     div.className = "added-constraint";
+	     div.innerHTML = "<strong>" + this.name + "</strong>   ";
+	     button.id = this.id + "-button";
+	     //	     button.style.cssFloat = "right";
+	     button.onclick = function () {
+		 constraint.remove();
+		 addConstraintOption(constraint.id, constraint.name);
+	     };
+	     button.innerHTML = "Remove";
+	     //	     div.appendChild(header);
+	     div.appendChild(button);
+	     document.getElementById("constraints").appendChild(div);
+	     // iter over form spec data
+	 }
+
+	 remove() {
+	     constraints = constraints.filter(c => c.id != this.id);
+	     let el = document.getElementById(this.id);
+	     el.parentElement.removeChild(el);
+	 }
+
+	 createForm() {
+	     let div = document.createElement("div");
+	     //	     let text = document.createElement("p");
+	     let addButton = document.createElement("input");
+	     let form = this.spec.buildForm();
+	     let constraint = this;
+	     div.className = "constraint-form";
+	     div.id = this.id + "-form-container"
+	     div.innerHTML = "<strong>" + this.name + "</strong>";
+	     addButton.id = this.id+"-add-button";
+	     addButton.type = "submit";
+	     addButton.style.cssFloat = "right";
+	     form.onsubmit = function () {
+
+		 constraint.toHTML();
+		 constraint.data = constraint.spec.getData();
+		 let container = document.getElementById("current-constraint");
+		 container.removeChild(div);
+		 removeConstraintOption(constraint.id);
+		 constraints.push(constraint);
+		 
+	     };
+	     addButton.value = "Add";
+	     //	     div.appendChild(text);
+	     form.appendChild(addButton);
+	     div.appendChild(form);
+	     document.getElementById("current-constraint").appendChild(div);
+	 }
+
+	 toPredicate() {
+	     let constraint = this;
+	     switch(this.id) {
+		 case "all-different":
+		     return function (l) { return l.predAllDifferent(); };
+		     break;
+		 case "possiblepitches":
+		     return function (l) { return  l.predPossiblePitches(constraint.data.getByKey("pitches")); };
+		     break;
+		 case "easy-neighbors":
+		     return function (l) { return l.predSuccessive( (f1,f2) => f1.easyNeighbors(f2) ); };
+		     break;
+		 case "number-of-changes":
+		     return function (l) { return l.predNumberOfChanges(constraint.data.getByKey("min"), constraint.data.getByKey("max")); };
+		     break;
+		 case "first-pitch":
+		     return function (l) { return l.predFirstPitchEqual(constraint.data.getByKey("pitch")); };
+		     break;
+		 case "ascending-pitches":
+		     return function (l) { return l.predAscendingPitch(); };
+		     break;
+		 case "descending-pitches":
+		     return function (l) { return l.predDescendingPitch(); };
+		     break;
+		 case "exclude-pitches":
+		     return function (l) { return  l.predExcludePitches(constraint.data.getByKey("pitches")); };
+		 case "alternating":
+		     return function (l) { return l.predAlternatingPitchDirection(); };
+		     break;
+		 case "possible-intervals":
+		     return function (l) { return l.predPossibleIntervals(constraint.data.getByKey("intervals")); };
+		     break;
+		 case "exclude-intervals":
+		     return function (l) { return l.predExcludeIntervals(constraint.data.getByKey("intervals")); };
+		     break;
+		 case "pitch-range":
+		     return function (l) { return l.predPitchRange(constraint.data.getByKey("min"), constraint.data.getByKey("max")); };
+		     break;
+		 case "pitch-sequence":
+		     return function (l) { return l.predPitchSeq(constraint.data.getByKey("pitches")); };
+		     break;
+		 case "no-consec-pitch-rep":
+		     return function (l) { return l.predNoImmediatePitchRepetition(); };
+		     break;
+		 case "interval-content":
+		     return function (l) { return l.predIntervalContent(constraint.data.getByKey("intervals")); };
+		 case "easy-group":
+		     return function (l) { return l.predNeighborGroup(); };
+		     break;
+		 case "interval-range":
+		     return function (l) { return l.predIntervalRange(constraint.data.getByKey("min"), constraint.data.getByKey("max")); };
+		     break;
+
+	     }
+	 }
+	 
+     }
+
+
+
+     
+     function removeConstraintOption(option) {
+	 let selectobject  = document.getElementById("constraint-menu");
+	 for (var i=0; i<selectobject.length; i++){
+	     if (selectobject.options[i].value == option )
+		 selectobject.options[i].disabled = true;
+	 }
+	 selectobject.selectedIndex = 0;
+     }
+
+     function addConstraintOption(optionValue) {
+	 let selectobject  = document.getElementById("constraint-menu");
+	 for (var i=0; i<selectobject.length; i++){
+	     if (selectobject.options[i].value == optionValue )
+		 selectobject.options[i].disabled = false;
+	 }
+	 /* 
+	  * 	 let select = document.getElementById("constraint-menu");
+	  * 	 let option = document.createElement("option");
+	  * 	 option.text = text;
+	  * 	 option.value = optionValue;
+	  * 	 select.add(option);*/
+     }
+
+     
+     function constraintUpdated(element) {
+	 let idx=element.selectedIndex;
+	 let val=element.options[idx].value;
+	 let constraint;
+	 document.getElementById("current-constraint").innerHTML = "";
+	 switch (val) {
+	     case "all-different":
+		 constraint = new Constraint("No repetitions of fingerings",[],"all-different");
+		 break;
+	     case "possiblepitches":
+		 constraint = new Constraint("Possible pitches",[["","text","pitches"]],"possiblepitches");
+		 break;
+	     case "easy-neighbors":
+		 constraint = new Constraint("Easy fingering transitions",[],"easy-neighbors");
+		 break;
+	     case "number-of-changes":
+		 constraint = new Constraint("Number of changing fingers",[["Minimum","number","min"],["Maximum","number","max"]],"number-of-changes");
+		 break;
+	     case "exclude-pitches":
+		 constraint = new Constraint("Exclude pitches",[["","text","pitches"]],"exclude-pitches");
+		 break;
+	     case "first-pitch":
+		 constraint = new Constraint("First pitch",[["","number","pitch"]],"first-pitch");
+		 break;
+	     case "ascending-pitches":
+		 constraint = new Constraint("Ascending pitches",[],"ascending-pitches");
+		 break;
+	     case "descending-pitches":
+		 constraint = new Constraint("Descending pitches",[],"descending-pitches");
+		 break;
+	     case "alternating":
+		 constraint = new Constraint("Alternating interval directions",[],"alternating");
+		 break;
+	     case "possible-intervals":
+		 constraint = new Constraint("Possible intervals",[["","text","intervals"]],"possible-intervals");
+		 break;
+	     case "exclude-intervals":
+		 constraint = new Constraint("Exclude intervals",[["","text","intervals"]],"exclude-intervals");
+		 break;
+	     case "pitch-range":
+		 constraint = new Constraint("Pitch range",[["Minimum","number","min"],["Maximum","number","max"]],"pitch-range");
+		 break;
+	     case "pitch-sequence":
+		 constraint = new Constraint("Pitch sequence",[["","text","pitches"]],"pitch-sequence");
+		 break;
+	     case "no-consec-pitch-rep":
+		 constraint = new Constraint("No consecutive pitch repetitions",[],"no-consec-pitch-rep");
+		 break;
+	     case "interval-content":
+		 constraint = new Constraint("Interval content",[["","text","intervals"]],"interval-content");
+		 break;
+	     case "easy-group":
+		 constraint = new Constraint("Easy fingering transitions group",[],val);
+		 break;
+	     case "interval-range":
+		 constraint = new Constraint("Interval range",[["Minimum","number","min"],["Maximum","number","max"]],"interval-range");
+		 break;
+	     default:
+		 throw "unrecognized constraint";
+		 break;
+
+
+	 };
+	 constraint.createForm();
+     }
+
+
+     
+     function nextSolution() {
+	 showLoader();
+
+	 setTimeout(function () {
+	     try {
+		 let solution = solver.solve();
+		 if (solution == false) {
+		     document.getElementById("results").innerHTML = "There are no (more) solutions.";
+		     document.getElementById("next-solution").disabled = true;
+		 } else {
+		     let text = solution.map(f => { return `${f.octaveList}\t` + `${f.listUp}`.replace("cis", "c#").padEnd(16) +
+							   `${f.listLow}`.replace("cis", "c#").padEnd(16) + `${f.pitch}` }).join("\n");
+		     showResults(text,"");
+		     document.getElementById("next-solution").disabled = false;
+		 };
+	     }
+	     catch(err) {
+		 document.getElementById("results").innerHTML = err;
+	     };
+	 }, 100);
+     }
+     
+     function showResults(text,lilypond) {
+	 let container = document.getElementById("results");
+	 container.innerHTML = "";
+	 let textarea = document.createElement("textarea");
+	 textarea.id = "result-text";
+	 textarea.rows = 24;
+	 textarea.columns = 30;
+	 textarea.readOnly = true;
+	 textarea.innerHTML = text;//.replace("cis", "c#");
+	 let downButton = document.createElement("button");
+	 let lilyButton = document.createElement("button");
+	 downButton.id = "download-text";
+	 lilyButton.id = "download-lily";
+	 downButton.type = "button";
+	 lilyButton.type = "button";
+	 lilyButton.disabled = true;
+	 downButton.innerHTML = "Download";
+	 downButton.onclick = downloadResult;
+	 lilyButton.innerHTML = "Download Lilypond File";
+	 let space = document.createTextNode(" ");
+	 container.appendChild(textarea);
+	 container.appendChild(downButton);
+	 container.appendChild(space);
+	 container.appendChild(lilyButton);
+     }
+
+     function showLoader() {
+	 document.getElementById("results").innerHTML = "";
+	 let spinner = document.createElement("div");
+	 spinner.className = "loader";
+	 results.appendChild(spinner);
+     }
+     
+     function findSolution() {
+	 console.log(constraints);
+	 // showLoader();
+	 
+	 let funs = constraints.map(c => c.toPredicate());
+	 let n = Number(document.getElementById("number").value);
+	 solver = new Solver(n,oboeMonoDB, l =>funs.lazyAndFunctionListInput(l));
+
+	 nextSolution();
+     }
+
+     function downloadResult() {
+	 let date = new Date();
+	 let month = ("0" + (date.getMonth() +　1)).slice(-2);
+	 let day = ("0" + (date.getDay())).slice(-2);
+	 let hours = ("0" + (date.getHours())).slice(-2);
+	 let minutes = ("0" + (date.getMinutes())).slice(-2);
+	 let seconds = ("0" + (date.getSeconds())).slice(-2);
+	 let dateString = date.getFullYear() + month + day + hours + minutes + seconds;
+
+	 let text = document.getElementById("result-text").innerHTML;
+	 var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+	 saveAs(blob, "oboeseq_" + dateString + ".txt");
+     }
+
+     
+    </script>
+    
+</html>
+
+
+<!-- 
+     neighbor group
+      -->
