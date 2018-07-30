@@ -672,7 +672,18 @@ function lilyLayoutEnding() {
       proportionalNotationDuration = #(ly:make-moment 1 20)
     }
   }
-`;
+
+\paper {
+  #(define fonts
+    (set-global-fonts
+      #:music "emmentaler"
+      #:brace "emmentaler"
+      #:roman "DejaVu Sans"
+      #:sans "sans-serif"
+      #:typewriter "monospace"
+      #:factor (/ staff-height pt 20)
+  ))
+}`;
 }
 
 function sequenceToLilypond(sequence, changesRed) {
