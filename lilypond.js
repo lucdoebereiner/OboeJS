@@ -28,19 +28,23 @@ String.prototype.lilyInBlue = function() {
 
 String.prototype.lilyStrikethrough = function() {
     if (this.length == 2) {
-	return (" \\concat{" + this[0] + " \\fontsize #2 { \\bold { \\char ##x0337 }} "
-		+ this[1] + "}");
+//	return (" \\concat{" + this[0] + " \\fontsize #2 { \\bold { \\char ##x0337 }} "
+//		+ this[1] + "}");
+	return (" \\concat{" + this[0] + "  \\char ##x0337  " + this[1] + "}");
     } else {
-	return (" \\concat{" + this + " \\fontsize #2 { \\bold { \\char ##x0337 }} }");
+//	return (" \\concat{" + this + " \\fontsize #2 { \\bold { \\char ##x0337 }} }");
+	return (" \\concat{" + this + " \\char ##x0337 }");
     }
 };
 
 String.prototype.lilyStrikethrough338 = function() {
     if (this.length == 2) {
-	return (" \\concat{" + this[0] + " \\fontsize #2 { \\bold { \\char ##x0338 }} "
-		+ this[1] + "}");
+//	return (" \\concat{" + this[0] + " \\fontsize #2 { \\bold { \\char ##x0338 }} "
+//		+ this[1] + "}");
+	return (" \\concat{" + this[0] + " \\char ##x0338 " + this[1] + "}");
     } else {
-	return (" \\concat{" + this + " \\fontsize #2 { \\bold { \\char ##x0338 }} }");
+//	return (" \\concat{" + this + " \\fontsize #2 { \\bold { \\char ##x0338 }} }");
+	return (" \\concat{" + this + " \\char ##x0338  }");
     }
 };
 
