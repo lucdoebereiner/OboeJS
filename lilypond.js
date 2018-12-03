@@ -673,7 +673,7 @@ function lilyLayoutEnding() {
     }
   }
 
-\paper {
+\\paper {
   #(define fonts
     (set-global-fonts
       #:music "emmentaler"

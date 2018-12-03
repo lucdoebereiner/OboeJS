@@ -160,7 +160,7 @@ class Constraint {
 	document.getElementById("current-constraint").appendChild(div);
     }
 
-    toPredicate() {
+    toPredicate(n) {
 	let constraint = this;
 	switch(this.id) {
 	case "all-different":
@@ -174,6 +174,10 @@ class Constraint {
 	    break;
 	case "number-of-changes":
 	    return function (l) { return l.predNumberOfChanges(constraint.data.getByKey("min"), constraint.data.getByKey("max")); };
+	    break;
+	case "number-of-changes-transition":
+	    return function (l) { return l.predNumberOfChangesTransition(n, constraint.data.getByKey("min-start"), constraint.data.getByKey("max-start"),
+									 constraint.data.getByKey("min-end"), constraint.data.getByKey("max-end")); };
 	    break;
 	case "first-pitch":
 	    return function (l) { return l.predFirstPitchEqual(constraint.data.getByKey("pitch")); };
@@ -221,9 +225,8 @@ class Constraint {
 	case "difficulty":
 	    return function (l) { return l.predDifficulty(constraint.data.getByKey("min"), constraint.data.getByKey("max")); };
 	    break;
-	}
+	};
     }
-    
 }
 
 
@@ -270,6 +273,10 @@ function constraintUpdated(element) {
 	break;
     case "number-of-changes":
 	constraint = new Constraint("Number of changing fingers",[["Minimum","number","min"],["Maximum","number","max"]],"number-of-changes");
+	break;
+    case "number-of-changes-transition":
+	constraint = new Constraint("Number of changing fingers transition",[["Minimum Start","number","min-start"], ["Maximum Start","number","max-start"],
+									     ["Minimum End","number","min-end"], ["Maximum End","number","max-end"]],"number-of-changes-transition");
 	break;
     case "exclude-pitches":
 	constraint = new Constraint("Exclude pitches",[["","text","pitches"]],"exclude-pitches");
@@ -396,8 +403,8 @@ function findSolution() {
     console.log(constraints);
     // showLoader();
     
-    let funs = constraints.map(c => c.toPredicate());
     let n = Number(document.getElementById("number").value);
+    let funs = constraints.map(c => c.toPredicate(n));
     let randomize = Boolean(document.getElementById("randomizeBox").checked);
     let domain;
     let domainType = document.getElementById("database-select").value;

@@ -1,5 +1,11 @@
 var TIMELIMIT = 12000;
 
+
+// Utility Methods
+function interpolate(x, start, end) {
+    return ((end - start) * x) + start;
+}
+
 /// Array Utility Methods
 Array.prototype.occurrencesOf = function(el) {
     let c = 0;
@@ -195,11 +201,25 @@ Array.prototype.predSuccessive = function(pred) {
 	if (!(pred(this[i],this[i+1])))  {
 	    result = false;
 	} else {
-	    i++
+	    i++;
 	};
     };
     return result;
 };
+
+Array.prototype.predSuccessiveCounter = function(pred) {
+    let result = true;
+    let i = 0;
+    while ( ( i < (this.length - 1) ) && result ) {
+	if (!(pred(this[i],this[i+1],i)))  {
+	    result = false;
+	} else {
+	    i++;
+	};
+    };
+    return result;
+};
+
 
 // pred takes two args
 Array.prototype.predAllCombinations = function(pred) {
@@ -322,7 +342,23 @@ Array.prototype.predNumberOfChanges = function(chmin, chmax) {
     });
 };
 
-	// all are neighbors of all others
+
+// changes transition
+Array.prototype.predNumberOfChangesTransition = function(n, chminStart, chmaxStart, chminEnd, chmaxEnd) {
+    return this.predSuccessive( (f1,f2,i) => {
+	let nch = f1.numberOfChanges(f2);
+	let curMin = interpolate(i/n, chminStart, chminEnd);
+	let curMax = interpolate(i/n, chmaxStart, chmaxEnd);
+	return ((nch >= curMin) && (nch <= curMax) &&
+		// also exclude difficult little finger changes
+		!(f1.changeLittleFinger(f2)) &&
+		!(f1.leftLittleFingerDoubleChange(f2)));
+    });
+};
+
+
+
+// all are neighbors of all others
 Array.prototype.predNeighborGroup = function() {
     return this.predAllCombinations( (f1,f2) => f1.easyNeighbors(f2));
 };
