@@ -1,4 +1,4 @@
-var TIMELIMIT = 12000;
+var TIMELIMIT = 30000;
 
 
 // Utility Methods
@@ -345,10 +345,13 @@ Array.prototype.predNumberOfChanges = function(chmin, chmax) {
 
 // changes transition
 Array.prototype.predNumberOfChangesTransition = function(n, chminStart, chmaxStart, chminEnd, chmaxEnd) {
-    return this.predSuccessive( (f1,f2,i) => {
+//    console.log(`n: ${n},  minstart: ${chminStart}, maxstart: ${chmaxStart}, minend: ${chminEnd}, maxend: ${chmaxEnd}, `);
+    return this.predSuccessiveCounter( (f1,f2,i) => {
+//	console.log(`i: ${i}`);
 	let nch = f1.numberOfChanges(f2);
-	let curMin = interpolate(i/n, chminStart, chminEnd);
-	let curMax = interpolate(i/n, chmaxStart, chmaxEnd);
+	let curMin = Math.round(interpolate(i/(n-2), chminStart, chminEnd));
+	let curMax = Math.round(interpolate(i/(n-2), chmaxStart, chmaxEnd));
+	console.log(`curMin: ${curMin},  curMax: ${curMax}, i/n: ${i/(n-2)}, nch: ${nch}`);
 	return ((nch >= curMin) && (nch <= curMax) &&
 		// also exclude difficult little finger changes
 		!(f1.changeLittleFinger(f2)) &&
